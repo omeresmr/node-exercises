@@ -1,20 +1,30 @@
-// Routing
-// GET /products -> Gibt alle Produkte zurück
-// POST /products -> Fügt ein neues Produkt in die JSON Datei ein. Req-body: {"title", "price"}
-// GET /products/:id
-// DELETE /products/:id
+const express = require('express');
+const path = require('path');
+const rootDir = require('./util/path');
 
-// Middlewares
-// Eine Logging Middleware die so loggt: [2025-11-25 15:33:02] GET /products
-// Timestamp Middleware -> Jede request kriegt req.requestTime = newDate().toISOString() und wird im Controller an den Client zurückgegeben.
-// Body-Parser Middleware -> app.use(express.json())
+const app = express();
 
-// Globales Error Handling
+// Set /public to static path
+app.use(express.static(path.join(rootDir, 'public')));
 
-// public -> static
+const rootRoutes = require(path.join(rootDir, 'routes', 'root.js'));
+const aboutRoutes = require(path.join(rootDir, 'routes', 'about.js'));
+const usersRoutes = require(path.join(rootDir, 'routes', 'users.js'));
 
-// Custom 404 Page
+// Timestamp Middleware
+app.use((req, res, next) => {
+  req.time = new Date().toISOString();
+  next();
+});
 
-// Post darf nur weitergehen, wenn -> title existiert und rice eine number ist.
+// Logger Middleware
+app.use((req, res, next) => {
+  console.log(`[${req.time}] ${req.method} ${req.url}`);
+  next();
+});
 
-//
+app.use(rootRoutes);
+app.use(aboutRoutes);
+app.use(usersRoutes);
+
+app.listen(3000);
