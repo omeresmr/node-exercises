@@ -1,0 +1,12 @@
+{
+  "name": "04-upload-analyse-server",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "watch": "node --watch app.js"
+  }
+}
