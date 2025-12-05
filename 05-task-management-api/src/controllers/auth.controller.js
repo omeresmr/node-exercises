@@ -1,7 +1,5 @@
 import { readFromFile, writeToFile } from '../utils/fileHelpers.js';
-
-const sendErrorMsg = (res, statusCode = 400, message) =>
-  res.status(statusCode).json({ message });
+import sendErrorMsg from '../utils/sendErrorMsg.js';
 
 export const register = async (req, res) => {
   const { email, password, name } = req.body;
@@ -9,7 +7,7 @@ export const register = async (req, res) => {
   const users = await readFromFile('users.json');
   const userExists = users.some((user) => user.email === email);
 
-  if (userExists) sendErrorMsg(res, 400, 'Email already exists');
+  if (userExists) return sendErrorMsg(res, 400, 'Email already exists');
 
   const newUser = {
     id: `user-${Date.now()}`,
@@ -39,9 +37,9 @@ export const login = async (req, res) => {
 
   const user = users.find((user) => user.email === email);
 
-  if (!user) sendErrorMsg(res, 401, 'Invalid credentials');
+  if (!user) return sendErrorMsg(res, 401, 'Invalid credentials');
   else if (user.password !== password)
-    sendErrorMsg(res, 401, 'Invalid credentials');
+    return sendErrorMsg(res, 401, 'Invalid credentials');
   else {
     const token = `mock-token-${user.id}-${Date.now()}`;
 
@@ -55,4 +53,8 @@ export const login = async (req, res) => {
       },
     });
   }
+};
+
+export const getProfile = (req, res) => {
+  res.json({ user: req.user });
 };

@@ -12,6 +12,11 @@ export const validateLogin = [
   body('password').notEmpty(),
 ];
 
+export const validateProject = [
+  body('title').trim().notEmpty().isLength({ min: 3 }),
+  body('description').optional().trim(),
+];
+
 export const handleValidationErrors = (req, res, next) => {
   // Reads the error-container in the req object
   const errors = validationResult(req);
