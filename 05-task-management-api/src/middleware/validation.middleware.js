@@ -17,6 +17,17 @@ export const validateProject = [
   body('description').optional().trim(),
 ];
 
+export const validateTask = [
+  body('title').trim().notEmpty().isLength({ min: 3 }),
+  body('description').optional().trim(),
+  body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('status').optional().isIn(['todo', 'in-progress', 'done']),
+];
+
+export const validateTaskStatus = [
+  body('status').isIn(['todo', 'in-progress', 'done']),
+];
+
 export const handleValidationErrors = (req, res, next) => {
   // Reads the error-container in the req object
   const errors = validationResult(req);

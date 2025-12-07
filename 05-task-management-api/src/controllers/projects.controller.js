@@ -10,7 +10,7 @@ export const getAllProjects = async (req, res) => {
     return sendErrorMsg(res, 404, 'No saved projects found');
 
   const sortedProjects = filteredProjects.sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
   return res.status(200).json(sortedProjects);
