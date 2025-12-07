@@ -1,13 +1,16 @@
 import { readFromFile, writeToFile } from '../utils/fileHelpers.js';
-import sendErrorMsg from '../utils/sendErrorMsg.js';
+import asyncHandler from '../utils/asyncHandler.js';
+import AppError from '../utils/AppError.js';
 
-export const register = async (req, res) => {
+export const register = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
 
   const users = await readFromFile('users.json');
   const userExists = users.some((user) => user.email === email);
 
-  if (userExists) return sendErrorMsg(res, 400, 'Email already exists');
+  if (userExists) {
+    throw new AppError('Email already exists', 400);
+  }
 
   const newUser = {
     id: `user-${Date.now()}`,
@@ -28,19 +31,20 @@ export const register = async (req, res) => {
       name: newUser.name,
     },
   });
-};
+});
 
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const users = await readFromFile('users.json');
 
   const user = users.find((user) => user.email === email);
 
-  if (!user) return sendErrorMsg(res, 401, 'Invalid credentials');
-  else if (user.password !== password)
-    return sendErrorMsg(res, 401, 'Invalid credentials');
-  else {
+  if (!user) {
+    throw new AppError('Invalid credentials', 401);
+  } else if (user.password !== password) {
+    throw new AppError('Invalid credentials', 401);
+  } else {
     const token = `mock-token-${user.id}-${Date.now()}`;
 
     res.json({
@@ -53,8 +57,8 @@ export const login = async (req, res) => {
       },
     });
   }
-};
+});
 
-export const getProfile = (req, res) => {
+export const getProfile = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
-};
+});

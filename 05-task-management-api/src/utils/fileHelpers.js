@@ -7,26 +7,15 @@ const dataPath = path.join(__dirname, 'src', 'data');
 export const readFromFile = async (fileName) => {
   const filePath = path.join(dataPath, fileName);
 
-  try {
-    const fileData = await fs.readFile(filePath);
+  const fileData = await fs.readFile(filePath);
 
-    const parsedData = JSON.parse(fileData);
+  const parsedData = JSON.parse(fileData);
 
-    return parsedData;
-  } catch (err) {
-    console.error(err);
-
-    return [];
-  }
+  return parsedData;
 };
-
 export const writeToFile = async (fileName, data) => {
   const filePath = path.join(dataPath, fileName);
 
-  try {
-    const dataToJSON = JSON.stringify(data);
-    await fs.writeFile(filePath, dataToJSON);
-  } catch (err) {
-    console.error(err);
-  }
+  const dataToJSON = JSON.stringify(data);
+  await fs.writeFile(filePath, dataToJSON);
 };

@@ -1,21 +1,18 @@
 import { readFromFile, writeToFile } from '../utils/fileHelpers.js';
-import sendErrorMsg from '../utils/sendErrorMsg.js';
+import asyncHandler from '../utils/asyncHandler.js';
+import AppError from '../utils/AppError.js';
 
-export const getAllProjects = async (req, res) => {
+export const getAllProjects = asyncHandler(async (req, res) => {
   const projects = await readFromFile('projects.json');
 
   const filteredProjects = projects.filter((pr) => pr.userId === req.user.id);
 
-  if (filteredProjects.length <= 0)
-    return sendErrorMsg(res, 404, 'No saved projects found');
+  if (filteredProjects.length <= 0) {
+    throw new AppError('No saved projects found', 404);
+  }
+});
 
-  const sortedProjects = filteredProjects.sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  );
-
-  return res.status(200).json(sortedProjects);
-};
-export const createProject = async (req, res) => {
+export const createProject = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
 
   const newProject = {
@@ -32,26 +29,32 @@ export const createProject = async (req, res) => {
   await writeToFile('projects.json', projects);
 
   return res.status(200).json(newProject);
-};
-export const getProjectById = async (req, res) => {
+});
+
+export const getProjectById = asyncHandler(async (req, res) => {
   const projectId = req.params.id;
   const projects = await readFromFile('projects.json');
   const project = projects.find((p) => p.id === projectId);
 
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
+  if (!project) {
+    throw new AppError('Project not found', 400);
+  }
 
-  if (project.userId !== req.user.id)
-    return res.status(403).json({ message: 'Not authorized' });
+  if (project.userId !== req.user.id) {
+    throw new AppError('Not authorized', 403);
+  }
 
   return res.status(200).json(project);
-};
-export const updateProject = async (req, res) => {
+});
+
+export const updateProject = asyncHandler(async (req, res) => {
   const projectId = req.params.id;
   const projects = await readFromFile('projects.json');
   const project = projects.find((p) => p.id === projectId);
 
-  if (project.userId !== req.user.id)
-    return res.status(403).json({ message: 'Not authorized' });
+  if (project.userId !== req.user.id) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const { title, description } = req.body;
 
@@ -61,18 +64,20 @@ export const updateProject = async (req, res) => {
   await writeToFile('projects.json', projects);
 
   return res.status(200).json({ message: 'Updated project successfully' });
-};
-export const deleteProject = async (req, res) => {
+});
+
+export const deleteProject = asyncHandler(async (req, res) => {
   const projectId = req.params.id;
   const projects = await readFromFile('projects.json');
   const project = projects.find((p) => p.id === projectId);
 
-  if (project.userId !== req.user.id)
-    return res.status(403).json({ message: 'Not authorized' });
+  if (project.userId !== req.user.id) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const updatedProjects = projects.filter((p) => p.id !== projectId);
 
   await writeToFile('projects.json', updatedProjects);
 
   return res.status(200).json({ message: 'Deleted project successfully' });
-};
+});

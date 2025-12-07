@@ -31,12 +31,7 @@ router.put(
   projectsController.updateProject
 );
 
-router.delete(
-  '/:id',
-  validateProject,
-  handleValidationErrors,
-  projectsController.deleteProject
-);
+router.delete('/:id', projectsController.deleteProject);
 
 // Tasks for a specific project
 router.get('/:id/tasks', tasksController.getTasksByProject);

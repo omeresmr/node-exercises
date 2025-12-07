@@ -1,16 +1,22 @@
 import { writeToFile, readFromFile } from '../utils/fileHelpers.js';
-import sendErrorMsg from '../utils/sendErrorMsg.js';
+import AppError from '../utils/AppError.js';
+import asyncHandler from '../utils/asyncHandler.js';
 import * as taskHelper from '../utils/tasksHelpers.js';
 
-export const getTasksByProject = async (req, res) => {
+export const getTasksByProject = asyncHandler(async (req, res) => {
   const project = await taskHelper.getProject(req);
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
-  taskHelper.checkProjectOwner(req, res, project);
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
+  if (!taskHelper.checkProjectOwner(req, project)) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const tasks = await readFromFile('tasks.json');
   const filteredTasks = tasks.filter((t) => t.projectId === project.id);
-  if (filteredTasks.length === 0)
-    return sendErrorMsg(res, 404, 'No tasks found');
+  if (filteredTasks.length === 0) {
+    throw new AppError('No tasks found', 404);
+  }
 
   // Sort by creation date
   const sortedTasks = filteredTasks.sort(
@@ -18,12 +24,17 @@ export const getTasksByProject = async (req, res) => {
   );
 
   return res.status(200).json(sortedTasks);
-};
+});
 
-export const createTask = async (req, res) => {
+export const createTask = asyncHandler(async (req, res) => {
   const project = await taskHelper.getProject(req);
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
-  taskHelper.checkProjectOwner(req, res, project);
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
+
+  if (!taskHelper.checkProjectOwner(req, project)) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const { title, description, priority } = req.body;
   const newTask = {
@@ -39,28 +50,40 @@ export const createTask = async (req, res) => {
   await taskHelper.saveTask(newTask);
 
   return res.status(201).json(newTask);
-};
+});
 
-export const getTaskById = async (req, res) => {
+export const getTaskById = asyncHandler(async (req, res) => {
   const task = await taskHelper.getTask(req);
-  if (!task) return sendErrorMsg(res, 404, 'Task not found');
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
 
   const project = await taskHelper.getProject(req, task.projectId);
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
 
-  taskHelper.checkProjectOwner(req, res, project);
+  if (!taskHelper.checkProjectOwner(req, project)) {
+    throw new AppError('Not authorized', 403);
+  }
 
   return res.status(200).json(task);
-};
+});
 
-export const updateTask = async (req, res) => {
+export const updateTask = asyncHandler(async (req, res) => {
   const task = await taskHelper.getTask(req);
-  if (!task) return sendErrorMsg(res, 404, 'Task not found');
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
 
   const project = await taskHelper.getProject(req, task.projectId);
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
 
-  taskHelper.checkProjectOwner(req, res, project);
+  if (!taskHelper.checkProjectOwner(req, project)) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const { title, description, priority, status } = req.body;
 
@@ -71,34 +94,48 @@ export const updateTask = async (req, res) => {
   if (priority) task.priority = priority;
   if (status) task.status = status;
 
-  await taskHelper.saveTask(task);
+  await taskHelper.updateTask(task);
 
   res.status(200).json(task);
-};
+});
 
-export const updateTaskStatus = async (req, res) => {
+export const updateTaskStatus = asyncHandler(async (req, res) => {
   const task = await taskHelper.getTask(req);
-  if (!task) return sendErrorMsg(res, 404, 'Task not found');
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
 
   const project = await taskHelper.getProject(req, task.projectId);
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
 
-  taskHelper.checkProjectOwner(req, res, project);
+  if (!taskHelper.checkProjectOwner(req, project)) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const { status } = req.body;
 
   task.status = status;
-  await taskHelper.saveTask(task);
+  await taskHelper.updateTask(task);
 
   return res.status(200).json(task);
-};
+});
 
-export const deleteTask = async (req, res) => {
+export const deleteTask = asyncHandler(async (req, res) => {
   const task = await taskHelper.getTask(req);
-  if (!task) return sendErrorMsg(res, 404, 'Task not found');
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
 
   const project = await taskHelper.getProject(req, task.projectId);
-  if (!project) return sendErrorMsg(res, 404, 'Project not found');
+  if (!project) {
+    throw new AppError('Project not found', 404);
+  }
+
+  if (!taskHelper.checkProjectOwner(req, project)) {
+    throw new AppError('Not authorized', 403);
+  }
 
   const tasks = await readFromFile('tasks.json');
   const indexToDelete = tasks.findIndex((t) => t.id === task.id);
@@ -107,4 +144,4 @@ export const deleteTask = async (req, res) => {
 
   await writeToFile('tasks.json', tasks);
   res.status(200).json({ message: 'Task deleted successfully' });
-};
+});

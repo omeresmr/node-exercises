@@ -1,24 +1,26 @@
-import sendErrorMsg from '../utils/sendErrorMsg.js';
 import { readFromFile } from '../utils/fileHelpers.js';
+import AppError from '../utils/AppError.js';
 
 export const authenticate = async (req, res, next) => {
-  console.log(req.headers);
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) return sendErrorMsg(res, 401, 'You need to login first');
+  if (!authHeader) {
+    throw new AppError('You need to login first', 401);
+  }
 
   // Get the token
   const token = authHeader.split(' ')[1];
 
-  if (!token) return sendErrorMsg(res, 401, 'No Token provided');
-  if (!token.startsWith('mock-token-'))
-    return sendErrorMsg(res, 401, 'Token in wrong format');
+  if (!token) {
+    throw new AppError('No token provided', 401);
+  }
+  if (!token.startsWith('mock-token-')) {
+    throw new AppError('Token in wrong format', 401);
+  }
 
   // Get the userId from the token
   const parts = token.split('-');
   const userId = `${parts[2]}-${parts[3]}`;
-
-  console.log(userId);
 
   // Get all users
   const users = await readFromFile('users.json');
@@ -26,7 +28,9 @@ export const authenticate = async (req, res, next) => {
   // Find user
   const user = users.find((u) => u.id === userId);
 
-  if (!user) return sendErrorMsg(res, 401, 'Invalid token');
+  if (!user) {
+    throw new AppError('Invalid token', 401);
+  }
 
   // Add user to request
   req.user = {
